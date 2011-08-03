@@ -44,9 +44,8 @@ class Solr::Connection
     @connection = Net::HTTP.new(@url.host, @url.port)
     
     @connection.read_timeout = opts[:timeout] if opts[:timeout]
-    if opts[:basic_auth_account] && opts[:basic_auth_password]
-      @connection.basic_auth(opts[:basic_auth_account], opts[:basic_auth_password])
-    end
+    @basic_auth_account = opts[:basic_auth_account]
+    @basic_auth_password = opts[:basic_auth_password]
   end
 
   # add a document to the index. you can pass in either a hash
@@ -158,10 +157,13 @@ class Solr::Connection
   # send the http post request to solr; for convenience there are shortcuts
   # to some requests: add(), query(), commit(), delete() or send()
   def post(request)
+    header = { "Content-Type" => request.content_type }
+    if @basic_auth_account && @basic_auth_password
+      header["Authorization"] = 'Basic ' + ["#{@basic_auth_account}:#{@basic_auth_password}"].pack('m').delete("\r\n")
+    end
     response = @connection.post(@url.path + "/" + request.handler,
                                 request.to_s,
-                                { "Content-Type" => request.content_type })
-  
+                                header)
     case response
     when Net::HTTPSuccess then response.body
     else
