@@ -76,7 +76,7 @@ end
 namespace :rails do
   desc "Creates rails plugin structure and distributable packages. init.rb is created and removed on the fly."
   task :package => "init.rb" do
-    File.rm_f("init.rb")
+    FileUtils.rm_f("init.rb")
   end
   Rake::PackageTask.new("solr-ruby-rails", SOLR_RUBY_VERSION) do |pkg|
     pkg.need_zip = true
